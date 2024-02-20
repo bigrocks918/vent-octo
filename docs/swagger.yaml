@@ -1,0 +1,401 @@
+definitions:
+  model.AvailabilityNewPayload_Rq:
+    properties:
+      currency:
+        type: string
+      localDate:
+        type: string
+      localDateEnd:
+        type: string
+      localDateStart:
+        type: string
+      price:
+        type: number
+      productId:
+        type: string
+    type: object
+  model.AvailabilityPayload_Rq:
+    properties:
+      localDate:
+        type: string
+      localDateEnd:
+        type: string
+      localDateStart:
+        type: string
+    type: object
+  model.AvailabilityPayload_Rs_Pricing:
+    properties:
+      available:
+        type: boolean
+      currency:
+        type: string
+      id:
+        type: string
+      localDate:
+        type: string
+      price:
+        type: number
+      productName:
+        type: string
+      status:
+        type: string
+      vacancies:
+        type: integer
+    type: object
+  model.Booking:
+    properties:
+      availabilityId:
+        type: string
+      currency:
+        type: string
+      id:
+        type: string
+      price:
+        type: number
+      status:
+        type: string
+      units:
+        type: integer
+    type: object
+  model.BookingPayload_Rq:
+    properties:
+      availabilityId:
+        type: string
+      productId:
+        type: string
+      units:
+        type: integer
+    type: object
+  model.BookingPayload_Rs_NonPricing:
+    properties:
+      availabilityId:
+        type: string
+      id:
+        type: string
+      status:
+        type: string
+      units:
+        items:
+          $ref: '#/definitions/model.BookingUnitPayload_Rs_NonPricing'
+        type: array
+    type: object
+  model.BookingUnitPayload_Rs_NonPricing:
+    properties:
+      bookingId:
+        type: string
+      id:
+        type: string
+    type: object
+  model.Product:
+    properties:
+      capacity:
+        type: integer
+      currency:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      price:
+        type: number
+    type: object
+  model.ProductPayload_Rq:
+    properties:
+      capacity:
+        type: integer
+      currency:
+        type: string
+      name:
+        type: string
+      price:
+        type: number
+    type: object
+  model.ProductPayload_Rs_NonPricing:
+    properties:
+      capacity:
+        type: integer
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /availabilities:
+    get:
+      consumes:
+      - application/json
+      description: Get availabilities by single date or date range
+      parameters:
+      - description: Capability
+        in: header
+        name: Capability
+        type: string
+      - description: Request Payload
+        in: body
+        name: AvailabilityPayload_Rq
+        required: true
+        schema:
+          $ref: '#/definitions/model.AvailabilityPayload_Rq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            items:
+              $ref: '#/definitions/model.AvailabilityPayload_Rs_Pricing'
+            type: array
+        "400":
+          description: Invalid request body
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Get availabilities
+      tags:
+      - availability
+  /availabilities/add:
+    post:
+      consumes:
+      - application/json
+      description: Adds availabilities for a product within a single date or date
+        range
+      parameters:
+      - description: Request Payload for Adding Availabilities
+        in: body
+        name: AvailabilityNewPayload_Rq
+        required: true
+        schema:
+          $ref: '#/definitions/model.AvailabilityNewPayload_Rq'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: successfully added
+          schema:
+            type: string
+        "400":
+          description: Invalid request body
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Add availabilities
+      tags:
+      - availability
+  /bookings/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Fetches a booking by its ID, with the option to filter by pricing
+        mode
+      parameters:
+      - description: Booking ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Capability to filter by pricing mode
+        in: header
+        name: Capability
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success - Return booking in pricing mode
+          schema:
+            $ref: '#/definitions/model.Booking'
+        "404":
+          description: Booking not found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Get a booking by ID
+      tags:
+      - booking
+  /bookings/all:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all bookings, with the option to filter by pricing mode
+      parameters:
+      - description: Capability to filter by pricing mode
+        in: header
+        name: Capability
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success - Return all bookings in pricing mode
+          schema:
+            items:
+              $ref: '#/definitions/model.Booking'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Get all bookings
+      tags:
+      - booking
+  /bookings/confirm/{id}:
+    put:
+      consumes:
+      - application/json
+      description: Confirms a booking by its ID
+      parameters:
+      - description: Booking ID to confirm
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Booking confirmed successfully
+          schema:
+            type: string
+        "404":
+          description: Booking not found after confirmation
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Confirm a booking
+      tags:
+      - booking
+  /bookings/post:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new booking and updates the availability accordingly
+      parameters:
+      - description: Request Payload for Posting a Booking
+        in: body
+        name: BookingPayload_Rq
+        required: true
+        schema:
+          $ref: '#/definitions/model.BookingPayload_Rq'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Booking successfully created
+          schema:
+            $ref: '#/definitions/model.Booking'
+        "400":
+          description: Invalid request body
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Post a booking
+      tags:
+      - booking
+  /products:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all products, with the option to filter by pricing mode
+      parameters:
+      - description: Capability to filter by pricing mode
+        in: header
+        name: Capability
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success - Return all products in pricing mode
+          schema:
+            items:
+              $ref: '#/definitions/model.Product'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Get all products
+      tags:
+      - product
+  /products/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Fetches a product by its ID, with the option to filter by pricing
+        mode
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Capability to filter by pricing mode
+        in: header
+        name: Capability
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success - Return product in pricing mode
+          schema:
+            $ref: '#/definitions/model.Product'
+        "404":
+          description: Product not found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Get a product by ID
+      tags:
+      - product
+  /products/add:
+    post:
+      consumes:
+      - application/json
+      description: Adds a new product to the database
+      parameters:
+      - description: Request Payload for Adding a Product
+        in: body
+        name: ProductPayload_Rq
+        required: true
+        schema:
+          $ref: '#/definitions/model.ProductPayload_Rq'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: successfully created
+          schema:
+            type: string
+        "400":
+          description: Invalid request body
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Add a product
+      tags:
+      - product
+swagger: "2.0"
